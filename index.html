@@ -1,95 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A web interface for MQTT over Websockets">
     <meta name="author" content="Fabian Affolter">
 
-    <title>Home conditions</title>
+    <title>Storage System</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.2.3/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.1.1"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.2/mqttws31.js"></script>
+    <link rel="stylesheet" href="bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script type="text/javascript" src="jquery.min.js"></script>
+    <script type="text/javascript" src="chart.js@2.8.0"></script>
+    <script type="text/javascript" src="mqttws31.js"></script>
 
-    <script type="text/javascript" src="js/index.js"></script>
-</head>
+    <script type="text/javascript" src="index.js"></script>
+<style type="text/css">/* Chart.js */
+@keyframes chartjs-render-animation{from{opacity:.99}to{opacity:1}}.chartjs-render-monitor{animation:chartjs-render-animation 1ms}.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{position:absolute;direction:ltr;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1}.chartjs-size-monitor-expand>div{position:absolute;width:1000000px;height:1000000px;left:0;top:0}.chartjs-size-monitor-shrink>div{position:absolute;width:200%;height:200%;left:0;top:0}</style></head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
-        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Home conditions</a>
-    </nav>
+    <!--<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
+        <a class="navbar-brand col-md-3 col-lg-2 mr-0 px-3" href="#">Storage System</a>
+    </nav>-->
     <div class="container-fluid">
-        <div id="status" class="alert">
-            <small>Loading...</small>
-        </div>
+        <div id="status" class="alert alert-danger">Connection failed: AMQJS0007E Socket error:undefined.Retrying...</div>
         <div class="card mb-2">
             <div class="row">
                 <div class="col-6 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Entrance
+                            Battery Voltage
                         </div>
-                        <span id="label1" class="badge w-100">Unknown</span>
+                        <span id="/battery/voltage" class="badge w-100">-</span><span class="badge w-100">V</span>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Back door
+                            Battery power
                         </div>
-                        <span id="label2" class="badge w-100">Unknown</span>
+                        <span id="/battery/power" class="badge w-100">-</span><span class="badge w-100">W</span>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Basement temperature
+                            Energy meter
                         </div>
-                        <span id="basementTempLabel" class="badge w-100">Unknown</span>
+                        <span id="/meter/energy" class="badge w-100">-</span><span class="badge w-100">kWh</span>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row">
             <div class="col-12 col-md-7 mb-2">
-                <div class="card">
+                <div class="card"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
                     <div class="card-body">
                         <div class="card-title">
-                            Living room temperature
-                            <span id="livingTempLabel" class="text-muted float-right badge">Unknown</span>
+                            Grid Power
+                            <span id="/meter/power" class="text-muted float-right badge">-</span>
                         </div>
                     </div>
-                    <canvas id="tempChart" width="300" height="120"></canvas>
+                    <canvas id="tempChart" style="display: block; width: 1088px; height: 260px;" class="chartjs-render-monitor"></canvas>
                 </div>
             </div>
             <div class="col-12 col-md-5">
                 <table class="table table-bordered table-sm table-striped mt-2">                    
                     <tbody>
                         <tr>
-                            <th>Entrance</th>
-                            <td><small id="value1">(no value received)</small></td>
+                            <th>Charger voltage</th>
+                            <td><small id="/charger/info/voltage">(no value received)</small><small> V</small></td>
                         </tr>
                         <tr>
-                            <th>Back door</th>
-                            <td><small id="value2">(no value received)</small></td>
+                            <th>Charger current</th>
+                            <td><small id="/charger/info/current">(no value received)</small><small> A</small></td>
                         </tr>
                         <tr>
-                            <th>Basement temperature</th>
-                            <td><small id="basementTempLabel">(no value received)</small></td>
+                            <th>Inverter current</th>
+                            <td><small id="/inverter/info/idc">(no value received)</small><small> A</small></td>
                         </tr>
                         <tr>
-                            <th>Living room temperature</th>
-                            <td><small id="livingTempSensor">(no value received)</small></td>
+                            <th>Battery min voltage</th>
+                            <td><small id="/bms/info/umin">(no value received)</small><small> mV</small></td>
                         </tr>
                         <tr>
-                            <th>Last MQTT message</th>
-                            <td><small id="message">no message recieved</small></td>
+                            <th>Battery max voltage</th>
+                            <td><small id="/bms/info/umax">(no value received)</small><small> mV</small></td>
+                        </tr>
+                        <tr>
+                            <th>Charger Temperature</th>
+                            <td><small id="/charger/info/temperature">(no value received)</small><small> °C</small></td>
+                        </tr>
+                        <tr>
+                            <th>Inverter Temperature</th>
+                            <td><small id="/inverter/info/temp">(no value received)</small><small> °C</small></td>
+                        </tr>
+                        <tr>
+                            <th>EVSE SoC</th>
+                            <td><small id="pyPlc/soc">(no value received)</small><small> %</small></td>
+                        </tr>
+                        <tr>
+                            <th>EVSE Power</th>
+                            <td><small id="sungrow/total_active_power">(no value received)</small><small> W</small></td>
+                        </tr>
+                        <tr>
+                            <th>EVSE Session Energy</th>
+                            <td><small id="sungrow/daily_battery_charge_energy">(no value received)</small><small> kWh</small></td>
+                        </tr>
+                        <tr>
+                            <th>EVSE SoC limit <input type="range" style="float: right" min="0" max="100" value="12" class="slider" id="pyPlc/soclimit/set" onchange="updateFromSlider(this)"></th>
+                            <td><small id="pyPlc/soclimit">(no value received)</small><small> %</small></td>
+                        </tr>
+                        <tr>
+                            <th>EVSE charge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/evchargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <td><small id="/grid/evchargethresh">(no value received)</small><small> €/MWh</small></td>
+                        </tr>
+                        <tr>
+                            <th>Battery discharge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/dischargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <td><small id="/grid/dischargethresh">(no value received)</small><small> €/MWh</small></td>
+                        </tr>
+                        <tr>
+                            <th>Battery grid charge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/chargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <td><small id="/grid/chargethresh">(no value received)</small><small> €/MWh</small></td>
+                        </tr>
+                        <tr>
+                            <th>Battery grid charge power <input type="range" style="float: right" min="0" max="1500" value="12" class="slider" id="/grid/chargepower/set" onchange="updateFromSlider(this)"></th>
+                            <td><small id="/grid/chargepower">(no value received)</small><small> W</small></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+        <div class="row">
+            <div class="col-12 col-md-7 mb-2">
+                <div class="card"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            Market Price
+                        </div>
+                    </div>
+                    <canvas id="priceChart" style="display: block; width: 1088px; height: 260px;" class="chartjs-render-monitor"></canvas>
+                </div>
+            </div>
+		</div>
         <hr>
         <footer class="text-center mt-10">
             <small>
@@ -97,5 +148,6 @@
             </small>
         </footer>
     </div>
-</body>
-</html>
+
+
+</body></html>
