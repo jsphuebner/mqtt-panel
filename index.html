@@ -27,17 +27,17 @@
                 <div class="col-6 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Battery Voltage
+                            PV Power
                         </div>
-                        <span id="/battery/voltage" class="badge w-100">-</span><span class="badge w-100">V</span>
+                        <span id="sungrow/pv_power" class="badge w-100">-</span><span class="badge w-100">W</span>
                     </div>
                 </div>
                 <div class="col-6 col-md-4">
                     <div class="card-body">
                         <div class="card-title">
-                            Battery power
+                            EVSE/Battery power
                         </div>
-                        <span id="/battery/power" class="badge w-100">-</span><span class="badge w-100">W</span>
+                        <span id="sungrow/signed_battery_power" class="badge w-100">-</span><span class="badge w-100">W</span>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
@@ -56,26 +56,41 @@
                     <div class="card-body">
                         <div class="card-title">
                             Grid Power
+                            <span class="text-muted float-right badge">W</span>
                             <span id="/meter/power" class="text-muted float-right badge">-</span>
                         </div>
                     </div>
                     <canvas id="tempChart" style="display: block; width: 1088px; height: 260px;" class="chartjs-render-monitor"></canvas>
+                </div>
+                <div class="card"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                    <div class="card-body">
+                        <div class="card-title">
+                            Market Price
+                            <span class="text-muted float-right badge">€/MWh</span>
+                            <span id="/spotmarket/pricenow" class="text-muted float-right badge">-</span>
+                        </div>
+                    </div>
+                    <canvas id="priceChart" style="display: block; width: 1088px; height: 260px;" class="chartjs-render-monitor"></canvas>
                 </div>
             </div>
             <div class="col-12 col-md-5">
                 <table class="table table-bordered table-sm table-striped mt-2">                    
                     <tbody>
                         <tr>
-                            <th>Charger voltage</th>
-                            <td><small id="/charger/info/voltage">(no value received)</small><small> V</small></td>
+                            <th>Bus voltage</th>
+                            <td><small id="sungrow/bus_voltage">(no value received)</small><small> V</small></td>
                         </tr>
                         <tr>
-                            <th>Charger current</th>
-                            <td><small id="/charger/info/current">(no value received)</small><small> A</small></td>
+                            <th>Battery SoC</th>
+                            <td><small id="/bms/info/soc">(no value received)</small><small> %</small></td>
                         </tr>
                         <tr>
-                            <th>Inverter current</th>
-                            <td><small id="/inverter/info/idc">(no value received)</small><small> A</small></td>
+                            <th>Battery voltage</th>
+                            <td><small id="/bms/info/packvoltage">(no value received)</small><small> V</small></td>
+                        </tr>
+                        <tr>
+                            <th>Battery current</th>
+                            <td><small id="/bms/info/current">(no value received)</small><small> A</small></td>
                         </tr>
                         <tr>
                             <th>Battery min voltage</th>
@@ -86,61 +101,41 @@
                             <td><small id="/bms/info/umax">(no value received)</small><small> mV</small></td>
                         </tr>
                         <tr>
-                            <th>Charger Temperature</th>
-                            <td><small id="/charger/info/temperature">(no value received)</small><small> °C</small></td>
-                        </tr>
-                        <tr>
-                            <th>Inverter Temperature</th>
-                            <td><small id="/inverter/info/temp">(no value received)</small><small> °C</small></td>
+                            <th>EVSE State</th>
+                            <td><small id="pyPlc/fsm_state">(no value received)</small><small> </small></td>
                         </tr>
                         <tr>
                             <th>EVSE SoC</th>
                             <td><small id="pyPlc/soc">(no value received)</small><small> %</small></td>
                         </tr>
                         <tr>
-                            <th>EVSE Power</th>
-                            <td><small id="sungrow/total_active_power">(no value received)</small><small> W</small></td>
-                        </tr>
-                        <tr>
                             <th>EVSE Session Energy</th>
                             <td><small id="sungrow/daily_battery_charge_energy">(no value received)</small><small> kWh</small></td>
                         </tr>
                         <tr>
-                            <th>EVSE SoC limit <input type="range" style="float: right" min="0" max="100" value="12" class="slider" id="pyPlc/soclimit/set" onchange="updateFromSlider(this)"></th>
+                            <th>EVSE SoC limit <input type="range" style="float: right; width: 60%" min="0" max="100" value="12" class="slider" id="pyPlc/soclimit/set" onchange="updateFromSlider(this)"></th>
                             <td><small id="pyPlc/soclimit">(no value received)</small><small> %</small></td>
                         </tr>
                         <tr>
-                            <th>EVSE charge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/evchargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <th>EVSE charge threshold <input type="range" style="float: right; width: 60%" min="-100" max="200" value="12" class="slider" id="/grid/evchargethresh/set" onchange="updateFromSlider(this)"></th>
                             <td><small id="/grid/evchargethresh">(no value received)</small><small> €/MWh</small></td>
                         </tr>
                         <tr>
-                            <th>Battery discharge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/dischargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <th>Battery discharge threshold <input type="range" style="float: right; width: 60%" min="-100" max="250" value="12" class="slider" id="/grid/dischargethresh/set" onchange="updateFromSlider(this)"></th>
                             <td><small id="/grid/dischargethresh">(no value received)</small><small> €/MWh</small></td>
                         </tr>
                         <tr>
-                            <th>Battery grid charge threshold <input type="range" style="float: right" min="-100" max="500" value="12" class="slider" id="/grid/chargethresh/set" onchange="updateFromSlider(this)"></th>
+                            <th>Battery grid charge threshold <input type="range" style="float: right; width: 60%" min="-100" max="120" value="12" class="slider" id="/grid/chargethresh/set" onchange="updateFromSlider(this)"></th>
                             <td><small id="/grid/chargethresh">(no value received)</small><small> €/MWh</small></td>
                         </tr>
                         <tr>
-                            <th>Battery grid charge power <input type="range" style="float: right" min="0" max="1500" value="12" class="slider" id="/grid/chargepower/set" onchange="updateFromSlider(this)"></th>
+                            <th>Battery grid charge power <input type="range" style="float: right; width: 60%" min="0" max="5000" value="12" class="slider" id="/grid/chargepower/set" onchange="updateFromSlider(this)"></th>
                             <td><small id="/grid/chargepower">(no value received)</small><small> W</small></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        <div class="row">
-            <div class="col-12 col-md-7 mb-2">
-                <div class="card"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
-                    <div class="card-body">
-                        <div class="card-title">
-                            Market Price
-                        </div>
-                    </div>
-                    <canvas id="priceChart" style="display: block; width: 1088px; height: 260px;" class="chartjs-render-monitor"></canvas>
-                </div>
-            </div>
-		</div>
         <hr>
         <footer class="text-center mt-10">
             <small>

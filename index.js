@@ -4,7 +4,7 @@ let topic = '#';
 let useTLS = false;
 let cleansession = true;
 let reconnectTimeout = 3000;
-let tempData = new Array();
+let powerData = new Array();
 let priceData = new Array();
 let mqtt;
 
@@ -51,8 +51,8 @@ function onMessageArrived(message) {
 
 	var span = document.getElementById(topic);
 	
-	if (span && topic != "/touran/info/values")
-		$(span).html(parseFloat(payload).toFixed(2));
+	if (span)
+		$(span).html(payload);
 	
 	span = document.getElementById(topic + "/set");
 
@@ -61,30 +61,14 @@ function onMessageArrived(message) {
 	
 	if (topic == "/meter/power")
 	{
-		tempData.push({
+		powerData.push({
 				        "timestamp": new Date().toLocaleTimeString(),
-				        "temperature": parseInt(payload)
+				        "value": parseInt(payload)
 				    });
-				    if (tempData.length >= 100) {
-				        tempData.shift()
-				    }
-	    drawChartPower(tempData);
-	}
-	
-	if (topic == "/touran/info/values")
-	{
-		var expr = /(\-{0,1}[0-9]+\.[0-9]*)/mg;
-		var values = []
-		for (var res = expr.exec(payload); res; res = expr.exec(payload))
-			values.push(parseFloat(res[1]));
-		var soc = values[0];
-		var curlimit = values[2];
-		var soclimit = values[3];
-		$(span).html(soc);
-		$("#chargelimit").html(curlimit);
-		document.getElementById("/touran/setpoint/chargelimit").value = curlimit;
-		$("#soclimit").html(soclimit);
-		document.getElementById("/touran/setpoint/soclimit").value = soclimit;
+	    if (powerData.length >= 100) {
+	        powerData.shift()
+	    }
+		updateChart(chartPower, powerData);
 	}
 	
 	if (topic == "/spotmarket/pricelist")
@@ -95,9 +79,9 @@ function onMessageArrived(message) {
 		
 		for (var i = 0; i < pricelist.length; i++)
 		{
-			priceData.push({ "timestamp": new Date(pricelist[i].start_timestamp).toLocaleTimeString(), "price": pricelist[i].marketprice });
+			priceData.push({ "timestamp": new Date(pricelist[i].start_timestamp).toLocaleTimeString(), "value": pricelist[i].marketprice });
 		}
-		drawChartPrice(priceData);
+		updateChart(chartPrice, priceData);
 	}
 };
 
@@ -112,25 +96,32 @@ function updateFromSlider(slider)
 	mqtt.send(message);
 }
 
-function drawChartPower(data) {
-    let ctx = document.getElementById("tempChart").getContext("2d");
-
-    let temperatures = []
+function updateChart(chart, data) {
+    let values = []
     let timestamps = []
 
     data.map((entry) => {
-        temperatures.push(entry.temperature);
+        values.push(entry.value);
         timestamps.push(entry.timestamp);
     });
+    
+    chart.config.data.labels = timestamps;
+    chart.config.data.datasets[0].data = values;
 
-    let chart = new Chart(ctx, {
+    chart.update();
+}
+
+function createCharts() {
+    var ctx = document.getElementById("priceChart").getContext("2d");
+
+    chartPrice = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: timestamps,
+            labels: [],
             datasets: [{
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
-                data: temperatures
+                data: []
             }]
         },
         options: {
@@ -142,27 +133,17 @@ function drawChartPower(data) {
             }
         }
     });
-}
+    
+    ctx = document.getElementById("tempChart").getContext("2d");
 
-function drawChartPrice(data) {
-    let ctx = document.getElementById("priceChart").getContext("2d");
-
-    let prices = []
-    let timestamps = []
-
-    data.map((entry) => {
-        prices.push(entry.price);
-        timestamps.push(entry.timestamp);
-    });
-
-    let chart = new Chart(ctx, {
+    chartPower = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: timestamps,
+            labels: [],
             datasets: [{
                 backgroundColor: 'rgb(255, 99, 132)',
                 borderColor: 'rgb(255, 99, 132)',
-                data: prices
+                data: []
             }]
         },
         options: {
@@ -177,7 +158,6 @@ function drawChartPrice(data) {
 }
 
 $(document).ready(function () {
-    drawChartPower(tempData);
-    drawChartPrice(priceData);
+    createCharts();
     MQTTconnect();
 });
